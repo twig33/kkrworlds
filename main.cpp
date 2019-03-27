@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <string>
 #include <iostream>
+#include <shader.h>
 GLuint id = 0;
 GLfloat vertices[] = {
 // First triangle
@@ -50,43 +51,10 @@ int main(void)
 	glewExperimental = GL_TRUE;
 	glewInit();
 
-	//vertex shader
-	GLuint vertexShader;
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
-	int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::vertex::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-	//fragment (color) shader
-	GLuint fragmentShader;
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
-
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::fragment::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-	//link shaders
-	GLuint shaderProgram;
-	shaderProgram = glCreateProgram();
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-	GLint vertexVecLocation = glGetUniformLocation(shaderProgram, "ourOffset");
-	GLint fragmentColorLocation = glGetUniformLocation(shaderProgram, "ourColor");
-	
-	//delete unneedeede sheders 
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
+	//shader init
+	Shader defaultShader("shader.vs","shader.frag");
+	GLint vertexVecLocation = glGetUniformLocation(defaultShader.ID, "ourOffset");
+	GLint fragmentColorLocation = glGetUniformLocation(defaultShader.ID, "ourColor");
 	
 	unsigned int VBO, VAO, VBO2, VAO2;
     glGenVertexArrays(1, &VAO); glGenVertexArrays(1, &VAO2);
@@ -105,7 +73,7 @@ int main(void)
     glBindBuffer(GL_ARRAY_BUFFER, VBO2);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), vertices2, GL_STATIC_DRAW);
 	//same attribute because we can
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
 	long frames = 0;
@@ -117,8 +85,8 @@ int main(void)
 	{
 		double timeBefore = glfwGetTime();
 		glfwPollEvents();
-		glClear(GL_COLOR_BUFFER_BIT);
-		glUseProgram(shaderProgram);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		defaultShader.use();
 		curroffsetx += offsetx;
 		if (vertices[0] + curroffsetx >= 1.0f || vertices[6] + curroffsetx <= -1.0f){
 			offsetx *= -1;

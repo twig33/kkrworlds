@@ -21,6 +21,6 @@ include_directories("${PROJECT_SOURCE_DIR}")
 
 
 
-add_executable(kkrworlds ${PROJECT_SOURCE_DIR}/main.cpp ${PROJECT_SOURCE_DIR}/shader.cpp)
+add_executable(kkrworlds ${PROJECT_SOURCE_DIR}/main.cpp ${PROJECT_SOURCE_DIR}/shader.cpp ${PROJECT_SOURCE_DIR}/stb_image_implementation)
 
 target_link_libraries(kkrworlds ${PROJECT_SOURCE_DIR}/lib/libglfw3dll.a opengl32 ${PROJECT_SOURCE_DIR}/lib/glew32.lib)

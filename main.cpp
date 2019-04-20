@@ -49,24 +49,103 @@ class model
 			mat = glm::rotate(mat, glm::radians(localRot[1]), glm::vec3(0.0, 1.0, 0.0));
 			mat = glm::rotate(mat, glm::radians(localRot[2]), glm::vec3(0.0, 0.0, 1.0));
 			mat = glm::scale(mat, scale);
+			if (mat == glm::mat4(1.0f))
+				std::cout << "aaaaaaA";
 			return mat;
 		}
 };
 
-const char *vertexShaderSource = "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-	"uniform vec3 ourOffset;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x + ourOffset.x, aPos.y + ourOffset.y, aPos.z + ourOffset.z, 1.0);\n"
-    "}\0";
-const char *fragmentShaderSource = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-	"uniform vec4 ourColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = ourColor;\n"
-    "}\n\0";
+
+enum AxisModes {axisWASD, axisARROWS};
+
+class input
+{
+	public:
+		int w = 0;
+		int a = 0;
+		int s = 0;
+		int d = 0;
+		int up = 0;
+		int down = 0;
+		int left = 0;
+		int right = 0;
+		
+		int YAxis(int mode)
+		{
+			int upbutton;
+			int downbutton;
+			switch(mode){
+				case axisWASD:
+					upbutton = w;
+					downbutton = s;
+					break;
+				case axisARROWS:
+					upbutton = up;
+					downbutton = down;
+					break;
+			}
+			if (upbutton == downbutton)
+				return 0;
+			else
+				return (upbutton ? 1 : -1);
+		}
+		int XAxis(int mode)
+		{
+			int rightbutton;
+			int leftbutton;
+			switch(mode){
+				case axisWASD:
+					rightbutton = d;
+					leftbutton = a;
+					break;
+				case axisARROWS:
+					rightbutton = right;
+					leftbutton = left;
+					break;
+			}
+			if (rightbutton == leftbutton)
+				return 0;
+			else
+				return (leftbutton ? 1 : -1);
+		}
+};
+
+input Input;
+
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (action == GLFW_REPEAT)
+		return;
+    int mode = (action == GLFW_PRESS);
+	switch (key){
+		case GLFW_KEY_W:
+			Input.w = mode;
+			return;
+		case GLFW_KEY_A:
+			Input.a = mode;
+			return;
+		case GLFW_KEY_S:
+			Input.s = mode;
+			return;
+		case GLFW_KEY_D:
+			Input.d = mode;
+			return;
+		case GLFW_KEY_UP:
+			Input.up = mode;
+			return;
+		case GLFW_KEY_DOWN:
+			Input.down = mode;
+			return;
+		case GLFW_KEY_LEFT:
+			Input.left = mode;
+			return;
+		case GLFW_KEY_RIGHT:
+			Input.right = mode;
+			return;
+	}
+	
+}
+
 static const double fpslimit = 1.0f / 60.0f;
 int main(void)
 {
@@ -90,6 +169,7 @@ int main(void)
 	GLint fragmentColorLocation = glGetUniformLocation(defaultShader.ID, "ourColor");
 	GLint transformLoc = glGetUniformLocation(defaultShader.ID, "transform");
 	GLint projLoc = glGetUniformLocation(defaultShader.ID, "proj");
+	GLint viewLoc = glGetUniformLocation(defaultShader.ID, "view");
 	//init TEXTURE
 	unsigned int texture;
 	glGenTextures(1, &texture);
@@ -152,36 +232,57 @@ int main(void)
 	float offsety = 0.01;
 	float curroffsety = 0.01;
 	 
-
-//	glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
 	unsigned int triangles = 200;
 	model transforms[triangles];
 	transforms[0].localRot = glm::vec3(0.0f, 0.0f, 45.0f);
 	transforms[0].scale = glm::vec3(0.5f,0.5f,0.5f);
 	transforms[0].position = glm::vec3(0.0f,0.0f, -3.5f);
-	/*transforms[1] = glm::mat4(1.0f);
-	transforms[1] = glm::translate(transforms[1], glm::vec3(0.0f, 0.55f, 0.0f));
-	transforms[1] = glm::rotate(transforms[1], glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
-	transforms[1] = glm::scale(transforms[1], glm::vec3(0.5, 0.5, 0.5));*/
-	float currot = 0.0f;
-	float curtransy = 0.0f;
 	for (int i = 1; i < triangles; ++i){
-		transforms[i] = transforms[0];
-		currot += 10.0f;
-		curtransy += 0.012f;
-		transforms[i].globalRot = glm::vec3(0.0f, 0.0f, currot);
-		transforms[i].position = glm::vec3(0.0f, curtransy, -3.5f);
-//std::cout << transforms[i].position[1] << "\n";
+		transforms[i] = transforms[i - 1];
+		transforms[i].globalRot = glm::vec3(0.0f, 0.0f, transforms[i-1].globalRot.z + 10.0f);
+		transforms[i].position = glm::vec3(0.0f, transforms[i-1].position.y + 0.012f, -3.5f);
 	}
-	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)800/(float)600, 0.1f, 100.0f);
 	float currevenz = -3.5f;
 	float curroddz = -3.5f;
 	float evenzadd = 0.02f;
 	float oddzadd = -0.02f;
+	
+	//matrice...for...projection...for...shader
+	glm::mat4 proj = glm::perspective(glm::radians(45.0f), (float)800/(float)600, 0.1f, 100.0f);
+	//camera
+	glm::mat4 camera = glm::mat4(1.0f);
+	glm::vec3 cameraPos = glm::vec3(0.0,0.0,3.0);
+	glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f, 0.0f);
+	camera = glm::lookAt(cameraPos,
+						 glm::vec3(0.0,0.0,0.0),
+						 glm::vec3(0.0,1.0,0.0));
+	float pitch = 0.0;
+	float yaw = -90;
+	//camera.position = glm::vec3(0.0f,0.0f,0.0f);
+	//input callbak
+	glfwSetKeyCallback(window, key_callback);
 	while(!glfwWindowShouldClose(window))
 	{
 		double timeBefore = glfwGetTime();
 		glfwPollEvents();
+		//camera.position.y += Input.XAxis() * 0.05;
+		//camera.position.x += Input.YAxis() * 0.05;
+		cameraPos += (GLfloat)(Input.YAxis(axisWASD) * 0.2) * cameraFront;
+		cameraPos += (GLfloat)(Input.XAxis(axisWASD) * 0.2 * -1) * glm::cross(glm::vec3(cameraFront.x,0.0, cameraFront.z), cameraUp);
+		pitch += Input.YAxis(axisARROWS) * 0.7;
+		if (pitch > 89.0)
+			pitch = 89.0;
+		if (pitch < -89.0)
+			pitch = -89.0;
+		yaw += Input.XAxis(axisARROWS) * 0.7 * -1;
+		glm::vec3 front;
+		front.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
+		front.y = sin(glm::radians(pitch));
+		front.z = cos(glm::radians(pitch)) * sin(glm::radians(yaw));
+		cameraFront = glm::normalize(front);
+		camera = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+		glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(camera)); 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		if (currevenz <= -3.75f || currevenz >= -3.25f){
 			evenzadd *= -1;

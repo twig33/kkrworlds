@@ -69,7 +69,7 @@ class input
 		int down = 0;
 		int left = 0;
 		int right = 0;
-		
+		//fix this delenie na 2 funci dobavit eshe mode arg nu hz kak eto ne po urodski sdelat a to budet swithc v switche
 		int YAxis(int mode)
 		{
 			int upbutton;
@@ -268,6 +268,7 @@ int main(void)
 		glfwPollEvents();
 		//camera.position.y += Input.XAxis() * 0.05;
 		//camera.position.x += Input.YAxis() * 0.05;
+		cameraFront.y = 0;
 		cameraPos += (GLfloat)(Input.YAxis(axisWASD) * 0.2) * cameraFront;
 		cameraPos += (GLfloat)(Input.XAxis(axisWASD) * 0.2 * -1) * glm::cross(glm::vec3(cameraFront.x,0.0, cameraFront.z), cameraUp);
 		pitch += Input.YAxis(axisARROWS) * 0.7;

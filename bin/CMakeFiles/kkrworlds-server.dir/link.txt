@@ -1,0 +1,1 @@
+/usr/bin/c++     CMakeFiles/kkrworlds-server.dir/server.cpp.o  -o kkrworlds-server -lpthread 

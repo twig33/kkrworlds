@@ -21,6 +21,8 @@ include_directories("${PROJECT_SOURCE_DIR}")
 
 
 
-add_executable(kkrworlds ${PROJECT_SOURCE_DIR}/main.cpp ${PROJECT_SOURCE_DIR}/shader.cpp ${PROJECT_SOURCE_DIR}/stb_image_implementation)
+add_executable(kkrworlds ${PROJECT_SOURCE_DIR}/main.cpp ${PROJECT_SOURCE_DIR}/shader.cpp ${PROJECT_SOURCE_DIR}/input.cpp ${PROJECT_SOURCE_DIR}/stb_image_implementation)
+add_executable(kkrworlds-server ${PROJECT_SOURCE_DIR}/server.cpp)
 
 target_link_libraries(kkrworlds glfw GL GLEW)
+target_link_libraries(kkrworlds-server pthread)

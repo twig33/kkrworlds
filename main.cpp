@@ -11,7 +11,11 @@
 #include <stb_image.h>
 #include <string>
 #include <iostream>
+
 #include <shader.h>
+#include <input.h>
+//#include <network.h>
+
 GLuint id = 0;
 GLfloat vertices[] = {
 // First triangle		
@@ -55,100 +59,24 @@ class model
 		}
 };
 
-
-enum AxisModes {axisWASD, axisARROWS};
-
-class input
-{
-	public:
-		int w = 0;
-		int a = 0;
-		int s = 0;
-		int d = 0;
-		int up = 0;
-		int down = 0;
-		int left = 0;
-		int right = 0;
-		//fix this delenie na 2 funci dobavit eshe mode arg nu hz kak eto ne po urodski sdelat a to budet swithc v switche
-		int YAxis(int mode)
-		{
-			int upbutton;
-			int downbutton;
-			switch(mode){
-				case axisWASD:
-					upbutton = w;
-					downbutton = s;
-					break;
-				case axisARROWS:
-					upbutton = up;
-					downbutton = down;
-					break;
-			}
-			if (upbutton == downbutton)
-				return 0;
-			else
-				return (upbutton ? 1 : -1);
-		}
-		int XAxis(int mode)
-		{
-			int rightbutton;
-			int leftbutton;
-			switch(mode){
-				case axisWASD:
-					rightbutton = d;
-					leftbutton = a;
-					break;
-				case axisARROWS:
-					rightbutton = right;
-					leftbutton = left;
-					break;
-			}
-			if (rightbutton == leftbutton)
-				return 0;
-			else
-				return (leftbutton ? 1 : -1);
-		}
+struct player{
+	unsigned long id;
+	model md;
 };
 
-input Input;
-
-void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
-	if (action == GLFW_REPEAT)
-		return;
-    int mode = (action == GLFW_PRESS);
-	switch (key){
-		case GLFW_KEY_W:
-			Input.w = mode;
-			return;
-		case GLFW_KEY_A:
-			Input.a = mode;
-			return;
-		case GLFW_KEY_S:
-			Input.s = mode;
-			return;
-		case GLFW_KEY_D:
-			Input.d = mode;
-			return;
-		case GLFW_KEY_UP:
-			Input.up = mode;
-			return;
-		case GLFW_KEY_DOWN:
-			Input.down = mode;
-			return;
-		case GLFW_KEY_LEFT:
-			Input.left = mode;
-			return;
-		case GLFW_KEY_RIGHT:
-			Input.right = mode;
-			return;
-	}
-	
-}
 
 static const double fpslimit = 1.0f / 60.0f;
-int main(void)
+
+
+int main(int argc, char* argv[])
 {
+	//networkl shit
+	//-----------------------------------------------
+		
+	//RINE END
+	//-----------------------------------------------
+	//END OF THE RINE HERE
+	
 	//glfw init and window
     glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -160,7 +88,7 @@ int main(void)
 	glfwMakeContextCurrent(window);
 	glViewport(0, 0, 800, 600);
 	//glew init 
-	glewExperimental = GL_TRUE;
+	glewExperimental = GL_TRUE; //ya uzhe забылdlya chevo eto
 	glewInit();
 
 	//shader init
@@ -262,21 +190,22 @@ int main(void)
 	//camera.position = glm::vec3(0.0f,0.0f,0.0f);
 	//input callbak
 	glfwSetKeyCallback(window, key_callback);
+	std::cout << "\n";
 	while(!glfwWindowShouldClose(window))
 	{
 		double timeBefore = glfwGetTime();
 		glfwPollEvents();
-		//camera.position.y += Input.XAxis() * 0.05;
-		//camera.position.x += Input.YAxis() * 0.05;
+		//camera.position.y += Input()->XAxis() * 0.05;
+		//camera.position.x += Input()->YAxis() * 0.05;
 		cameraFront.y = 0;
-		cameraPos += (GLfloat)(Input.YAxis(axisWASD) * 0.2) * cameraFront;
-		cameraPos += (GLfloat)(Input.XAxis(axisWASD) * 0.2 * -1) * glm::cross(glm::vec3(cameraFront.x,0.0, cameraFront.z), cameraUp);
-		pitch += Input.YAxis(axisARROWS) * 0.7;
+		cameraPos += (GLfloat)(Input()->YAxis(axisWASD) * 0.2) * cameraFront;
+		cameraPos += (GLfloat)(Input()->XAxis(axisWASD) * 0.2 * -1) * glm::cross(glm::vec3(cameraFront.x,0.0, cameraFront.z), cameraUp);
+		pitch += Input()->YAxis(axisARROWS) * 0.7;
 		if (pitch > 89.0)
 			pitch = 89.0;
 		if (pitch < -89.0)
 			pitch = -89.0;
-		yaw += Input.XAxis(axisARROWS) * 0.7 * -1;
+		yaw += Input()->XAxis(axisARROWS) * 0.7 * -1;
 		glm::vec3 front;
 		front.x = cos(glm::radians(pitch)) * cos(glm::radians(yaw));
 		front.y = sin(glm::radians(pitch));
@@ -324,6 +253,11 @@ int main(void)
 			while (glfwGetTime() < timeAfter + fpslimit - difference){};
 		}
 		frames++;
+		//--------------------------------------------
+		//network shit
+			
+			
+		//--------------------------------------------
 	}
 	glfwTerminate();
 }
